@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block body %}
+<br>
+<br>
+<div class="row">
+    <div class="col-12 px-5">
+        {% if viewName is not None %}
+            <h2>{{ viewName }} Form</h2>
+        {% endif %}
+        <br>
+        {% if user.groups.all.last.name == 'Company' %}
+            <div class="container-fluid px-5">
+                <form class="form-horizontal" action="" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if not staff %}
+                        <div class="form-group align-items-center">
+                            <div class="form-row align-items-center">
+                                <label class="control-label col-sm-2"></label>
+                                <input type="text" hidden="true" value="{{ self.id }}" id="company" name="company">
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="form-group align-items-center">
+                            <div class="form-row">
+                                <label class="control-label col-sm-2">Company</label>
+                                <div class="col-sm-3">
+                                    <select id="company" name="company">
+                                        <option value="{{ self.id }}">{{ self.name }}</option>
+                                        {% for s in staff %}
+                                            <option value="{{ s.company.id }}">{{ s.company.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="form-group align-items-center">
+                        <div class="form-row align-items-center">
+                            <span class="text-danger small">{{ field.errors }}</span>
+                        </div>
+                        <div class="form-row align-items-center">
+                            <label class="control-label col-sm-2">Artist Email</label>
+                            <input type="text" id="email" name="email">
+                        </div>
+                    </div>
+
+                    <div class="form-group pl-5">
+                        <button type="submit" class="btn btn-success">Submit</button>
+                    </div>
+                </form>
+            </div>
+        {% else %}
+        <h1>Access denied. You must have a Company account to proceed.</h1>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+<br>
+<div class="container"><h1>Venue Details</h1><hr><br>
+{% if user.username == object.company.username %}
+    <h2>
+    <u>Name:</u> {{ object }} <br><br>
+    <u>Location:</u> {{ object.location }} <br><br>
+    </h2>
+    <br>
+    {% if user.groups.all.last.name == 'Company' %}
+        <form style="display: inline; margin-left: 5%;" action="{% url 'getdata:venue-update' object.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="show_id" value="{{ object.id }}">&nbsp;
+            <button type="submit" class="btn btn-secondary">
+                <i class="fa fa-wrench"></i>
+            </button>&nbsp;
+        </form>&nbsp;
+        <form style="display: inline" action="{% url 'getdata:venue-delete' object.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="show_id" value="{{ object.id }}">
+            <button type="submit" class="btn btn-danger">
+                <i class="fa fa-trash"></i>
+            </button>
+        </form>
+    {% endif %}
+{% endif %}
+{% for s in staff %}
+    {% if s.company == object.company %}
+        <h2>
+            <u>Name:</u> {{ object }} <br><br>
+            <u>Location:</u> {{ object.location }} <br><br>
+        </h2>
+        <br>
+        {% if user.groups.all.last.name == 'Company' %}
+            <form style="display: inline; margin-left: 5%;" action="{% url 'getdata:venue-update' object.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="show_id" value="{{ object.id }}">&nbsp;
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fa fa-wrench"></i>
+                </button>&nbsp;
+            </form>&nbsp;
+            <form style="display: inline" action="{% url 'getdata:venue-delete' object.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="show_id" value="{{ object.id }}">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </form>
+        {% endif %}
+    {% endif %}
+{% endfor %}
+</div>
+{% endblock %}

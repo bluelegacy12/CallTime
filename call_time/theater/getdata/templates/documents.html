@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+<br>
+<div class="container-fluid pl-md-5">
+    <div class="row">
+        <div class="col-sm-10 text-center">
+            <h1>Documents</h1>
+        </div>
+    </div>
+    <hr>
+    Note: The mobile app is unable to use the download option for documents. Use a web browser to download docs if on mobile.
+    <br>
+    <div class="row">
+        <div class="col-sm-12">
+            {% if user.groups.all.last.name == 'Company' %}
+                <hr>
+                <h3><a href="{% url 'getdata:documents-add' %}?{{ self.id }}"><i class="fa fa-plus no-outline"></i> Upload a new file</a></h3>
+                <hr>
+                <h2><u>{{ self.name }}</u></h2>
+                {% for doc in self.uploads_set.all %}
+                    <br>
+                    <h2>
+                    <a class='docLink' data-title='{{ doc.name }}' data-url="{{ doc.file.url|cut:'download' }}" data-name="{{ doc.file }}" data-toggle="modal" data-target="#docModal" aria-hidden="true"><i class="fa fa-file no-outline"></i> {{ doc.name }}</a>&emsp;<a href="{{ doc.file.url }}" download><i class="fa fa-download"></i></a><br>
+                    {{ doc.details }}
+                    </h2>
+                    <form style="display: inline; margin-left: 5%;" action="{% url 'getdata:documents-update' doc.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="doc_id" value="{{ doc.id }}">&nbsp;
+                        <button type="submit" class="btn btn-secondary">
+                            <i class="fa fa-wrench"></i>
+                        </button>&nbsp;
+                    </form>&nbsp;
+                    <form style="display: inline" action="{% url 'getdata:documents-delete' doc.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="doc_id" value="{{ doc.id }}">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </form>
+                    <br>
+                {% endfor %}
+                <hr>
+                {% for s in staff %}
+                    <h2><u>{{ s.company }}</u></h2>
+                    {% for doc in s.company.uploads_set.all %}
+                        <br>
+                        <h2>
+                        <a class='docLink' data-title='{{ doc.name }}' data-url="{{ doc.file.url|cut:'download' }}" data-name="{{ doc.file }}" data-toggle="modal" data-target="#docModal" aria-hidden="true"><i class="fa fa-file no-outline"></i> {{ doc.name }}</a>&emsp;<a href="{{ doc.file.url }}" download><i class="fa fa-download"></i></a><br>
+                        {{ doc.details }}
+                        </h2>
+                        <form style="display: inline; margin-left: 5%;" action="{% url 'getdata:documents-update' doc.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="doc_id" value="{{ doc.id }}">&nbsp;
+                            <button type="submit" class="btn btn-secondary">
+                                <i class="fa fa-wrench"></i>
+                            </button>&nbsp;
+                        </form>&nbsp;
+                        <form style="display: inline" action="{% url 'getdata:documents-delete' doc.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="doc_id" value="{{ doc.id }}">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </form>
+                        <br>
+                    {% endfor %}
+                {% endfor %}
+            {% elif user.groups.all.last.name == 'Artist' %}
+                <hr>
+                {% for company in companies %}
+                    {% for performer in company.performers.all %}
+                        {% if performer.username == user.username %}
+                            <h2><u>{{ company }}</u></h2><br>
+                            {% for doc in company.uploads_set.all %}
+                                <h3>
+                                    <a class='docLink' data-title='{{ doc.name }}' data-url="{{ doc.file.url|cut:'download' }}" data-name="{{ doc.file }}" data-toggle="modal" data-target="#docModal" aria-hidden="true"><i class="fa fa-file no-outline"></i> {{ doc.name }}</a>&emsp;<a href="{{ doc.file.url }}" download><i class="fa fa-download"></i></a></h3>
+                                    <h4>{{ doc.details }}</h4>
+                                    <br>
+                            {% endfor %}
+                            <hr>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="docModal">
+    <div class="modal-dialog modal-lg text-center" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h2 class="modal-title text-center" id="docTitle"></h2>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="text-dark no-outline">×</span>
+                </button>
+            </div>
+            <div class="modal-body bg-secondary">
+                <div id='docUrl'><i class="fa fa-spinner fa-pulse"></i></div>
+            </div>
+            <div class="modal-footer bg-info">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const docLinks = document.querySelectorAll('.docLink');
+    const docTitle = document.querySelector('#docTitle');
+    const docUrl = document.querySelector('#docUrl');
+
+    for (let link of docLinks) {
+        link.addEventListener('click', getDoc);
+    }
+
+    function getDoc() {
+        docTitle.innerHTML = this.dataset.title;
+        if (this.dataset.name.includes('.png') || this.dataset.name.includes('.jpg')) {
+            setTimeout(() => { docUrl.innerHTML = `<img src='${this.dataset.url}' width=90% />`; }, 1000);
+        } else if (this.dataset.name.includes('.doc') || this.dataset.name.includes('.pdf')) {
+            setTimeout(() => { docUrl.innerHTML = `<iframe src="https://docs.google.com/gview?url=${this.dataset.url}&embedded=true" style="width:90%; height:600px;"></iframe>`; }, 1000);
+        } else {
+            setTimeout(() => { docUrl.innerHTML = '<h3>No preview available for this file type. Download the file instead to view.</h3>'; }, 1000);
+        }
+    }
+
+
+    $('#docModal').on('shown.bs.modal', function () {
+        $('.docLink').trigger('focus');
+    });
+
+    $("#docModal").on("hide.bs.modal", function () {
+        docUrl.innerHTML = '<i class="fa fa-spinner fa-pulse"></i>';
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+<div class="container text-center"><h1>Artist Profile</h1></div><br>
+<div style="display: flexbox;" class="indent">
+    <div style="float: left; width: 50%;">
+        {% if user.groups.all.last.name == 'Artist' %}
+            <h2><u>Name</u>: {{ object.first_name }} {{ object.last_name }}<br><br>
+                {% if object.username == user.username or object.public_profile == True %}
+                    <u>Email</u>: {{ object.email }} <br><br>
+                    <u>Phone</u>: {{ object.phone }}<br><br>
+                {% endif %}
+                {% if object.roles_set.all.count > 0 %}
+                    <u>Roles:</u>
+                    {% for role in object.roles_set.all %}
+                        <a href="{% url 'getdata:roleinfo' role.id %}">{{ role.name }}</a> - <i>{{ role.show_id.title }}</i>{% if role != object.roles_set.all.last %},{% endif %}
+                    {% endfor %}
+                {% endif %}
+                {% if object.username == user.username %}
+                    </form><br><br>
+                {% endif %}
+            </h2><br><br>
+        </div>
+<!-- show personal schedule -->
+        {% if object.calltime_set.all.count > 0 %} <!--need this code incase someone else tries to view another's full schedule-->
+            <div style="float: left; width: 50%; padding-left: 5%; border-left: 2px solid;">
+                {% if object.calltime_set.all.count > 0 %}
+                    <h2><u> Most Recent Schedule:</u></h2>
+                    <h3> {{ object.calltime_set.all.last.date }}</h3>
+                    <h4><ul>
+                    {% for call in object.calltime_set.all|dictsort:'start_time' %}
+                        {% if call.date == object.calltime_set.all.last.date %}
+                            <br><li><u>{{ call.show_id_id.title }}:
+                            {{ call.start_time|time:"g:i a" }}{% if call.end_time %} - {{ call.end_time|time:"g:i a" }}{% endif %}</u>
+                            {% if call.headline %}<br>{{ call.headline }}{% endif %}
+                            {% if call.venue_id %}
+                                <br><br>{{ call.venue_id }} - {{ call.venue_id.location }}<br><br>
+                            {% endif %}
+                            {% if call.notes %}{{ call.notes }} <br><br>
+                            {% endif %}</li>
+                        {% endif %}
+                    {% endfor %}
+                    </ul></h4>
+                    {% if object.username == user.username %}
+                        <h3><a href="{% url 'getdata:callinfo' object.calltime_set.all.last.id %}"><i class="fa fa-calendar"></i> See full schedule</a></h3>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+
+
+{% elif user.groups.all.last.name == 'Company' %}
+    <h2><u>Name</u>: {{ performer.first_name }} {{ performer.last_name }}<br><br>
+    {% if performer.public_profile == True %}
+        <u>Email</u>: {{ performer.email }} <br><br>
+        <u>Phone</u>: {{ performer.phone }}<br><br>
+    {% endif %}
+    {% if performer.roles_set.all.count > 0 %}
+        <u>Active Roles</u>:
+        {% for role in performer.roles_set.all %}
+            {% if role.show_id.company.username == user.username %}
+                <a href="{% url 'getdata:roleinfo' role.id %}">{{ role.name }}</a> - <i>{{ role.show_id.title }}</i><br>
+            {% endif %}
+        {% endfor %}
+        </h2><br><br>
+    {% endif %}
+    {% for company in company_list %}
+        {% if company.username == user.username %}
+            {% if performer in company.performers.all %}
+                <h3><div class="fa fa-check"></div> {{ performer.first_name}} is on your roster.</h3>
+            {% else %}
+                <h3><div class="fa fa-xmark"></div> {{ performer.first_name }} is not on your roster.</h3>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+    </div>
+    <div style="float: left; width: 50%; padding-left: 5%; border-left: 2px solid;">
+        {% if performer.calltime_set.all.count > 0 %}
+            <h2><u> Most Recent Schedule:</u></h2>
+            {% if performer.calltime_set.all.last.company.username == user.username or self.email in string %}
+                <h3> {{ performer.calltime_set.all.last.date }}</h3>
+            {% else %}
+                <h3>{{ performer.first_name }}'s most recent calltime is for a different company.</h3>
+            {% endif %}
+            <h4><ul>
+            {% for call in performer.calltime_set.all|dictsort:'start_time' %}
+                {% if call.date == performer.calltime_set.all.last.date and call.company.email in string %}
+                    <br><li><u>{{ call.show_id_id.title }}:
+                    {{ call.start_time|time:"g:i a" }}{% if call.end_time %} - {{ call.end_time|time:"g:i a" }}{% endif %}</u>
+                    {% if call.headline %}<br>{{ call.headline }}{% endif %}
+                    {% if call.venue_id %}
+                        <br><br>{{ call.venue_id }} - {{ call.venue_id.location }}<br><br>
+                    {% endif %}
+                    {% if call.notes %}{{ call.notes }} <br><br>
+                    {% endif %}</li>
+                {% endif %}
+            {% endfor %}
+            </ul></h4>
+        {% endif %}
+    </div>
+{% endif %}
+</div>
+{% endblock %}

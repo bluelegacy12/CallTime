@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+<br>
+<div class="container"><h1>Category Details</h1></div>
+<br>
+<div class="indent">
+    {% for p in object.company.performers.all %}
+        {% if p.username == user.username %}
+            <h2>
+                <u>Name:</u> {{ object.name }} <br><br>
+                <u>Company:</u> {{ object.company.name }} <br><br>
+                <u>Description:</u> {{ object.description }} <br><br>
+            </h2>
+            <br>
+        {% endif %}
+    {% endfor %}
+    {% if object.company.username == user.username or self.email in string %}
+        <h2>
+            <u>Name</u>: {{ object.name }} <br><br>
+            <u>Company:</u> {{ object.company.name }} <br><br>
+            <u>Description:</u> {{ object.description }} <br><br>
+        </h2>
+        <br>
+        <form style="display: inline; margin-left: 5%;" action="{% url 'getdata:category-update' object.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="category_id" value="{{ object.id }}">&nbsp;
+            <button type="submit" class="btn btn-secondary">
+                <i class="fa fa-wrench"></i>
+            </button>&nbsp;
+        </form>&nbsp;
+        <form style="display: inline" action="{% url 'getdata:category-delete' object.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="category_id" value="{{ object.id }}">
+            <button type="submit" class="btn btn-danger">
+                <i class="fa fa-trash"></i>
+            </button>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

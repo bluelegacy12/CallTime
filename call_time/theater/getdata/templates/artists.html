@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+{% if self.email in string or object.id == self.id %}
+    <div class="container">
+        <div class="row">
+            {% if staff %}
+                <div class="col-10 text-center content-center my-5">
+                    <div class="col-sm-3 mx-auto">
+                        <select onChange="window.location.href=this.value">
+                            <option hidden>Change Company</option>
+                            <option value="{% url 'getdata:artists' self.id %}">{{ self.name }}</option>
+                            {% for s in staff %}
+                                <option value="{% url 'getdata:artists' s.company.id %}">{{ s.company.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            {% endif %}
+            <div class="col-sm-10 text-center">
+                <br>
+                <h1>{{ object.name }} Artists</h1>
+                <br>
+                <br>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                {% if object.performers.all.count > 0 %}
+                    <h3>
+                    {% for artist in object.performers.all %}
+                        {{ artist.first_name }} {{ artist.last_name }}: &nbsp;
+                        {% for role in artist.roles_set.all %}
+                            {% for show in object.shows_set.all %}
+                                {% if role.show_id == show %}
+                                    <a href="{% url 'getdata:roleinfo' role.id %}">{{ role.name }}</a> - <i><a href="{% url 'getdata:showinfo' role.show_id.id %}">{{ role.show_id.title }}</a></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                        {% if object.performers.all.count < 10 %}
+                        <br><br>
+                        {% else %}
+                        <br>
+                        {% endif %}
+                    {% endfor %}
+                    </h3>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <u>Join Code</u>: <button id="joininfoBtn" class="btn btn-sm btn-info spin no-outline fa fa-info rounded-circle mb-3" style="font-size: 12px" data-toggle="modal" data-target="#joininfo" aria-hidden="true"></button>&emsp;<input value="{{ code }}" id="code"></input> <button id="copy" class="btn btn-info my-auto"> <i style="-webkit-text-stroke: .2px #00A8E8;" class="fa fa-copy"> </i></button>
+                <form class="form-horizontal" action="{% url 'getdata:join' %}?{{ object.id }}" method="post">
+                    {% csrf_token %}
+                    <br>
+                    {% if object.join == True %}
+                        <p class='text-success'>Join Code Open &emsp;<button class="btn btn-warning my-auto">Close Join Code</button></p>
+                    {% else %}
+                        <p class='text-danger'>Join Code Closed &emsp;<button class="btn btn-warning my-auto">Open Join Code</button></p>
+                    {% endif %}
+                </form>
+                <br><br>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <button onclick="window.location.href=this.value" value="{% url 'getdata:conflicts' %}" class="btn btn-secondary text-white my-auto"><i class="fa fa-calendar-times"></i> View Artist Conflicts</button>
+            </div>
+            <div class="col">
+                <form action="{% url 'getdata:companyperformers-update' object.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="company_id" value="{{ object.id }}">
+                    <button type="submit" class="btn btn-info my-auto">
+                        <i class="fa fa-users"></i> Edit Performer List
+                    </button>
+                </form>
+            </div>
+        </div>
+        <br><br>
+        <h3>Send an alert to notify your cast of any updates.</h3>
+        <br>
+        <div class="row pl-5">
+            <form class="form-horizontal" action="{% url 'getdata:alert' %}" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-4">
+                        <textarea type="text" rows="5" cols="33" name="alert">A new document has been uploaded! View it at: dylanelza.pythonanywhere.com/getdata/documents/</textarea><br>
+                        <button type="submit" onclick="Alert()" class="btn btn-primary">Send Alert</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+    <br>
+    <h1 class="text-center">Access denied. You must have the corresponding Company account to proceed.</h1>
+{% endif %}
+<br><br>
+
+<div class="modal fade" id="joininfo">
+    <div class="modal-dialog modal-lg text-center" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h2 class="modal-title ml-5" id="tutorialTitle">How to use your Join Code</h2>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="text-dark no-outline">×</span>
+                </button>
+            </div>
+            <div class="modal-body bg-secondary">
+                <p>Copy the link and send it to new cast members to register them to your cast list!<br>
+                This is a url link and Cast Members <i><u>must</u></i> be logged in already when using the link.</p>
+                <br>
+                <p>You can open or close your Join Code whenever you want! It is recommended to close the Join Code once you have confirmed that your cast is all set.
+                Otherwise, anyone who happens to have your code, or former cast members, can still join your roster when you may not want them to.</p>
+            </div>
+            <div class="modal-footer bg-info">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let copy = document.querySelector('#copy');
+    let code = document.querySelector('#code');
+    copy.addEventListener('click', CopyCode);
+
+    function CopyCode() {
+        code.focus();
+        code.select();
+        code.setSelectionRange(0, 99999); // For mobile devices
+        document.execCommand("copy", false);
+        alert("Copied the text: " + code.value);
+    }
+
+    function Alert() {
+        alert("An email alert has been sent to all staff and artists!");
+    }
+</script>
+{% endblock %}

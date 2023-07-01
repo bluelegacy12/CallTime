@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="container-fluid px-5">
+    <div class="row text-center justify-content-center">
+        <div class="col-sm-12">
+            {% if user.is_authenticated %}
+                {% if user.groups.all.last.name == 'Artist' %}
+                    <br><br>
+                    <h1>Join the cast at {{ object.name }}?</h1>
+                    <form class="form-horizontal" action="" method="post">
+                        {% csrf_token %}
+                        {% include 'form-template.html' %}
+                        <button type="submit" class="btn btn-success">Join</button>
+                    </form>
+                {% else %}
+                    <br><br>
+                    <h1>This link is for Artist Accounts only. If you wish to link Company Accounts, you must add the email of an existing Company Account to your Staff. A Staff member with an email that is tied to an existing Company Account will have access to create schedules for the Company Account they are a Staff memeber of.</h1>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

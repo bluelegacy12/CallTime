@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+<br>
+<div class="container-fluid pl-md-5">
+    <div class="row">
+        <div class="col-sm-12 text-center">
+            <h1>Artist Conflict Dates</h1><br>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            {% if user.groups.all.last.name == 'Company' %}
+                <hr style="margin-right: 10%;">
+                <h2 class="text-center"><u>{{ self.name }}</u></h2>
+                {% for performer in self.performers.all %}
+                    {% if performer.conflict_set.all.count > 0 %}
+                        <br>
+                        <div class="performers">
+                            <h2 style="color: #00A8E8; -webkit-text-stroke: .1px white;">{{ performer.first_name }} {{ performer.last_name }}</h2>
+                            <ul>
+                                {% for conflict in performer.conflict_set.all|dictsort:'start_date' %}
+                                    {% if conflict.company == self %}
+                                        <li>
+                                            <a href="{% url 'getdata:conflictinfo' conflict.id %}">{{ conflict.start_date }}{% if conflict.end_date %} - {{ conflict.end_date }}{% endif %}</a>&emsp;{% if conflict.start_time %} {{ conflict.start_time|time:"g:i a" }} - {% if conflict.end_time %}{{ conflict.end_time|time:"g:i a" }}{% else %}End of Day{% endif %}{% elif conflict.end_time %} Start of Day - {{ conflict.end_time|time:"g:i a" }}{% else %} All Day{% endif %}
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                <hr style="margin-right: 10%;">
+                {% for s in staff %}
+                    <h2 class="text-center"><u>{{ s.company.name }}</u></h2>
+                    {% for performer in s.company.performers.all %}
+                        {% if performer.conflict_set.all.count > 0 %}
+                            <br>
+                            <div class="performers">
+                                <h2 style="color: #00A8E8; -webkit-text-stroke: .1px white;">{{ performer.first_name }} {{ performer.last_name }}</h2>
+                                <ul>
+                                    {% for conflict in performer.conflict_set.all|dictsort:'start_date' %}
+                                        {% if conflict.company == s.company %}
+                                            <li>
+                                                <a href="{% url 'getdata:conflictinfo' conflict.id %}">{{ conflict.start_date }}{% if conflict.end_date %} - {{ conflict.end_date }}{% endif %}</a>&emsp;{% if conflict.start_time %} {{ conflict.start_time|time:"g:i a" }} - {% if conflict.end_time %}{{ conflict.end_time|time:"g:i a" }}{% else %}End of Day{% endif %}{% elif conflict.end_time %} Start of Day - {{ conflict.end_time|time:"g:i a" }}{% else %} All Day{% endif %}
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    const performers = document.querySelectorAll('.performers');
+
+    for (let performer of performers) {
+        if (performer.querySelector("li") == null){
+            performer.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

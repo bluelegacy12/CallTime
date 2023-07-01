@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block body %}
+<header class="jumbotron jumbotron-fluid">
+    <div style="padding-left: 10%;">
+        {% if is_mobile %}
+            <img width=100 src="/images/CallTimeLogocirclebg.png"></img>
+        {% else %}
+            <img width=240 src="/images/CallTimeLogocirclebg.png"></img>
+        {% endif %}
+    </div>
+</header>
+<input id="error" type="hidden" value="{{ error }}">
+{% if user.groups.all.last.name == 'Artist' %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <p>Click on the title of a show to view its schedule</p>
+            </div>
+        </div>
+        {% for company in companies %}
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <hr>
+                    <br>
+                    <h1>{{ company.name }}</h1>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                {% for performer in company.performers.all %}
+                    {% if performer.username == user.username %}
+                        {% for show in company.shows_set.all %}
+                            {% csrf_token %}
+                            <div class="col-md-3 mx-auto">
+                                <div class="card border-info mb-4" style="max-width: 30rem;">
+                                    <div class="card-header text-white bg-info"><h2><a style="color: white;" href="{% url 'getdata:showinfo' show.id %}">{{ show.title }}</a></h2></div>
+                                    <div class="card-body bg-dark">
+                                        <h4 class="card-title">Opens: {{ show.show_open }}</h4>
+                                        {% for role in show.roles_set.all %}
+                                            <p class="offset-1 card-text">{% if role.performer_id %}<a href="{% url 'getdata:info' role.performer_id.id %}">{{ role.performer_id }}</a> - {% endif %}<a href="{% url 'getdata:roleinfo' role.id %}" style="color: white">{{ role.name }}</a></p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <!--{% if performer.roles_set.all.count < 1 %}-->
+                        <!--    <h2>You are not currently registered under any shows.</h2>-->
+                        <!--{% endif %}-->
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <br>
+        {% endfor %}
+        <div class="row">
+            <div class="col-sm-12 text-center">
+                {% if self.company_set.all.count < 1 %}
+                    <hr>
+                    <br>
+                    <h2>You are not currently registered under any shows.</h2>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% elif user.groups.all.last.name == 'Company' %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <p>Click on the title of a show to view its schedule &nbsp;<button id="tutorialBtn" class="btn btn-sm btn-info spin no-outline fa fa-info rounded-circle mb-3" style="font-size: 12px" data-toggle="modal" data-target="#tutorial" aria-hidden="true"></button></p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 text-center">
+                        <hr>
+                        <br>
+                        <h1>{{ self.name }}</h1>
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    {% for show in self.shows_set.all %}
+                        {% csrf_token %}
+                        <div class="col-md-3 mx-auto">
+                            <div class="card border-info mb-4" style="max-width: 30rem;">
+                                <div class="card-header text-white bg-info"><h2><i><a style="color: white;" href="{% url 'getdata:showinfo' show.id %}">{{ show.title }}</a></i></h2></div>
+                                <div class="card-body bg-dark">
+                                    <h4 class="card-title">Opens: {{ show.show_open }}</h4>
+                                    {% for role in show.roles_set.all|dictsort:"id" %}
+                                        <p class="offset-1 card-text">{% if role.performer_id %}<a href="{% url 'getdata:info' role.performer_id.id %}">{{ role.performer_id }}</a> - {% endif %}<a href="{% url 'getdata:roleinfo' role.id %}" style="color: white">{{ role.name }}</a></p>
+                                    {% endfor %}
+                                    <a class="offset-2 card-text addRole" href="{% url 'getdata:role-add' %}?{{ show.id }}"><i class="fa fa-user-plus no-outline"></i> Add Role</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <br>
+            {% for s in staff %}
+                <div class="col-md-12 text-center">
+                    <hr>
+                    <br>
+                    <h1>{{ s.company.name }}</h1>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                {% for show in s.company.shows_set.all %}
+                    {% csrf_token %}
+                    <div class="col-md-3 mx-auto">
+                        <div class="card border-info mb-4" style="max-width: 30rem;">
+                            <div class="card-header text-white bg-info"><h2><i><a style="color: white;" href="{% url 'getdata:showinfo' show.id %}">{{ show.title }}</a></i></h2></div>
+                            <div class="card-body bg-dark">
+                                <h4 class="card-title">Opens: {{ show.show_open }}</h4>
+                                {% for role in show.roles_set.all %}
+                                    <p class="offset-1 card-text">{% if role.performer_id %}<a href="{% url 'getdata:info' role.performer_id.id %}">{{ role.performer_id }}</a> - {% endif %}<a href="{% url 'getdata:roleinfo' role.id %}" style="color: white">{{ role.name }}</a></p>
+                                {% endfor %}
+                                <a class="offset-2 card-text addRole" href="{% url 'getdata:role-add' %}?{{ show.id }}"><i class="fa fa-user-plus"></i> Add Role</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                <br>
+            {% endfor %}
+        </div>
+         <br><br>
+    </div>
+    {% if company.shows_set.all.count < 1 %}
+        <div class="container">
+            <h3>You have no shows to display. Follow these steps to set up your season:</h3>
+            <br>
+    {% endif %}
+    {% if company.calltime_set.all.count < 1 or company.shows_set.all.count < 1 %}
+        <ol>
+            <li><h4>Use 'Add Show' to create a show in your season. You do not have to set a director yet.</h4></li>
+            <li><h4>Use 'Add Cast Member' with the artist's email to add them to your roster. This email must be linked to their Artist Account.</h4></li>
+            <li><h4>On the homepage, click 'Add role' under the show title to create a role and link an artist to that role.</h4></li>
+            <li><h4>Use 'Add Venue' to define all rehearsal or performance spaces that the cast could be called to.</h4></li>
+            <li><h4>Once all shows, venues, and artists have been set up, use 'Create a Schedule' to add a call time block. You can have multiple call time blocks per day, so be sure to create a new schedule for a different block in the same day and they will be automatically joined together.</h4></li>
+            <li><h4>From your profile page, you can add Staff members for anyone who does not need (or want) an account, and they will still get any schedule updates and alerts via email. You should only use one Company Account per real company. Data created from another Company Account will not be linked to this account.</h4></li>
+        </ol>
+        </div><br><br>
+    {% endif %}
+{% endif %}
+
+<div class="modal fade" id="tutorial">
+    <div class="modal-dialog modal-lg text-center" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h2 class="modal-title text-center" id="tutorialTitle">Video Guide</h2>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="text-dark no-outline">×</span>
+                </button>
+            </div>
+            <div class="modal-body bg-secondary">
+                {% if is_mobile %}
+                    <iframe width="auto" height="auto" src="https://www.youtube.com/embed/Jsc_MZOkz2A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                {% else %}
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/Jsc_MZOkz2A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                {% endif %}
+            </div>
+            <div class="modal-footer bg-info">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let error = document.querySelector('#error').value;
+    let tutorialButton = document.querySelector('#tutorialBtn');
+
+    if (error) {
+        alert("Error: " + error);
+    }
+
+    $('#tutorial').on('shown.bs.modal', function () {
+        $('#tutorialBtn').trigger('focus');
+    })
+</script>
+{% endblock %}
+

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if self.email in string %}
+    <br>
+    <div class="container-fluid">
+        <div class="row text-center">
+            <div class="col-sm-12">
+                <h1>Are you sure you wish to delete {% if object.name %} {{ object.name }} {% elif object.title %} {{ object.title }} {% else %} {{ object }}{% endif %}?</h1>
+            </div>
+        </div>
+        <br>
+        <br>
+        <div class="row d-flex justify-content-center">
+            <div class="col-sm-1">
+                <form class="form-horizontal" action="" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success">Confirm</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-sm-1">
+                <form class="form-horizontal" action="{% url 'getdata:home' %}" method="get">
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-danger">Deny</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

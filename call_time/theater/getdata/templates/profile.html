@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-10 text-center">
+            <br>
+            <h1>Your Profile</h1>
+            <br>
+            <br>
+        </div>
+    </div>
+    <div class="row">
+        {% if user.groups.all.last.name == 'Artist' %}
+            <div class="col-sm-5 mx-auto">
+                <h2><u>Name</u>: {{ performer.first_name }} {{ performer.last_name }}<br><br>
+                <u>Email</u>: {{ performer.email }} <br><br>
+                <u>Phone</u>: {{ performer.phone }}<br><br>
+                <u>Username</u>: {{ performer.username }}<br><br>
+                {% if performer.roles_set.all.count > 0 %}
+                    <u>Roles</u>:
+                    {% for role in performer.roles_set.all %}
+                        <a href="{% url 'getdata:roleinfo' role.id %}">{{ role.name }}</a> - <i>{{ role.show_id.title }}</i><br>
+                    {% endfor %}
+                {% endif %}
+                <br>
+                <u>Conflicts</u>:</h2>
+                {% if performer.conflict_set.all.count > 0 %}
+                    <ul>
+                        {% for conflict in performer.conflict_set.all %}
+                            <li><span>{{ conflict.start_date }}{% if conflict.end_date %} - {{ conflict.end_date }}{% endif %}</span>&emsp;{{ conflict.company.name }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    None
+                {% endif %}
+                <br>
+                {% if performer.username == user.username %}
+                    <hr>
+                    <h2><u>Receive email updates</u>: {% if performer.email_notifications == True %}<p class="text-success" style="-webkit-text-stroke: 0px white; display: inline-block;"> Yes </p>{% else %} <p class="text-danger" style="-webkit-text-stroke: 0px white; display: inline-block;"> No </p> {% endif %}</h2><br>
+                    <form class="form-horizontal" action="{% url 'getdata:email-notice' %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <button type="submit" class="btn btn-secondary">Change</button>
+                            </div>
+                        </div>
+                    </form>
+                    <br>
+                    <p> Choose whether a company can email you schedules or other updates.</p>
+                    <hr>
+                    <h2><u>Profile</u>: <p class="text-warning" style="-webkit-text-stroke: 0px white; display: inline-block;">{% if performer.public_profile == True %} Public {% else %} Private {% endif %}</p></h2><br>
+                    <form class="form-horizontal" action="{% url 'getdata:privacy' %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <button type="submit" class="btn btn-warning text-white">Change</button>
+                            </div>
+                        </div>
+                    </form><br>
+                    <p>To hide your phone and email from other users, set Profile to Private.</p>
+                    <hr>
+                {% endif %}
+
+                {% if performer.username == user.username %}
+                    <form style="display: inline; margin-left: 5%; padding-bottom: 10%;" action="{% url 'getdata:performer-update' performer.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="performer_id" value="{{ performer.id }}">&nbsp;
+                        <button type="submit" class="btn btn-secondary">
+                            <i class="fa fa-wrench"></i> Edit Profile
+                        </button>&nbsp;&nbsp;
+                    </form>&nbsp;
+                    <button onclick="window.location.href=this.value" value="{% url 'getdata:user-update' user.id %}" class="btn btn-warning text-white">Change Password</button>
+                {% endif %}
+                <hr>
+                <br>
+            </div>
+<!-- show personal schedule -->
+ <!--need this code incase someone else tries to view another's full schedule-->
+            <div class="col-sm-6" style="border-left: solid 2px white; padding-left: 50px;">
+            {% if performer.calltime_set.all.count > 0 %}
+                <h2><u> {{ performer.first_name }}'s Latest Schedule:</u></h2>
+                <h3><span> {{ performer.calltime_set.all.last.date }}</span></h3>
+                <h4><ul>
+                {% for call in performer.calltime_set.all|dictsort:'start_time' %}
+                    {% if call.date == performer.calltime_set.all.last.date %}
+                        <br><li><u>{{ call.show_id_id.title }}:
+                        {{ call.start_time|time:"g:i a" }}{% if call.end_time %} - {{ call.end_time|time:"g:i a" }}{% endif %}</u>
+                        {% if call.headline %}
+                            <br>{{ call.headline }}
+                        {% endif %}
+                        {% if call.venue_id %}
+                            <br><br>{{ call.venue_id }} - {{ call.venue_id.location }}<br><br>
+                        {% endif %}
+                        {% if call.quickcall_set.all.count > 0 %}{% for q in call.quickcall_set.all %}{{ q.start_time|time:"g:i a" }}{% if q.end_time %} - {{ q.end_time|time:"g:i a" }}{% endif %}{% if q.details %} <u>{{ q.details }}</u>{% endif %}<br>{% endfor %}{% endif %}</li>
+                        {% if call.notes %}<br>{{ call.notes }}<br>{% endif %}
+                    {% endif %}
+                {% endfor %}
+                </ul></h4><br>
+                <h4><a href="{% url 'getdata:callinfo' performer.calltime_set.all.last.id %}"><i class="fa fa-calendar"></i> See full schedule</a></h3>
+            {% endif %}
+            </div>
+        {% elif user.groups.all.last.name == 'Company' %}
+            <div class="col-md-12 pl-5">
+                <h2><u>Name</u>: {{ self.name }} <br><br>
+                    <u>Email</u>: {{ self.email }} <br><br>
+                    <u>Username</u>: {{ self.username }}<br><br>
+                    <u>Logo</u>: {% if self.logo %}<img style="width: 100px;" src="{{ self.logo.url }}">{% else %}None{% endif %}&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="window.location.href=this.value" value="{% url 'getdata:logo' self.id %}" class="btn btn-info">Update Logo</button><br><br>
+                    <a href="{% url 'getdata:staffinfo' %}"><i class="fa fa-clipboard-list no-outline"></i> View Staff</a><br><br>
+                <div class="row pl-5">
+                    <form class="d-flex align-content-center" style="display: inline-block; margin-left: 5%;" action="{% url 'getdata:company-update' self.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="company_id" value="{{ self.id }}">
+                        <button type="submit" class="btn btn-secondary my-auto">
+                            <i class="fa fa-wrench"></i> Edit Profile
+                        </button>&nbsp;&nbsp;
+                    </form>
+                    <button onclick="window.location.href=this.value" value="{% url 'getdata:user-update' user.id %}" class="btn btn-warning text-white my-auto">Change Password</button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+<br><br>
+<script>
+    function Alert() {
+        alert("An email alert has been sent to all staff and artists!");
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+<br>
+{% if self.email in string or object.company == self %}
+    <div class="container"><h1>Conflict with {{ object.company.name }}</h1></div>
+    <br>
+    <div class="indent">
+        {% for p in object.company.performers.all %}
+            {% if p.username == user.username %}
+                <h2>
+                    <u>Name</u>: {{ object.performer_id.first_name }} {{ object.performer_id.last_name }} <br><br>
+                    <u>Date{% if object.end_date %}s{% endif %}</u>: {{ object.start_date }}{% if object.end_date %} - {{ object.end_date }}{% endif %}<br><br>
+                    <u>Time</u>: {% if object.start_time %} {{ object.start_time|time:"g:i a" }} - {% if object.end_time %}{{ object.end_time|time:"g:i a" }}{% else %}End of Day{% endif %}{% elif object.end_time %} Start of Day - {{ object.end_time|time:"g:i a" }}{% else %} All Day{% endif %}
+                </h2>
+                <br>
+            {% endif %}
+        {% endfor %}
+        {% if object.company.username == user.username or self.email in string %}
+            <h2>
+                <u>Name</u>: {{ object.performer_id.first_name }} {{ object.performer_id.last_name }} <br><br>
+                <u>Date{% if object.end_date %}s{% endif %}</u>: {{ object.start_date }}{% if object.end_date %} - {{ object.end_date }}{% endif %}<br><br>
+                <u>Time</u>: {% if object.start_time %} {{ object.start_time|time:"g:i a" }} - {% if object.end_time %}{{ object.end_time|time:"g:i a" }}{% else %}End of Day{% endif %}{% elif object.end_time %} Start of Day - {{ object.end_time|time:"g:i a" }}{% else %} All Day{% endif %}
+            </h2>
+            <br>
+            <form style="display: inline; margin-left: 5%;" action="{% url 'getdata:conflict-update' object.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="conflict_id" value="{{ object.id }}">&nbsp;
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fa fa-wrench"></i>
+                </button>&nbsp;
+            </form>&nbsp;
+            <form style="display: inline" action="{% url 'getdata:conflict-delete' object.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="conflict_id" value="{{ object.id }}">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </form>
+        {% endif %}
+    </div>
+{% else %}
+    <br>
+    <h1 class="text-center">Access denied. You must have the corresponding Company account to proceed.</h1>
+{% endif %}
+{% endblock %}

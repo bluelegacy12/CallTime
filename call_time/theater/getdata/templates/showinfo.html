@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-10 text-center">
+            <br>
+            <h1>Show Details</h1>
+            <br>
+            <br>
+        </div>
+    </div>
+<div class="row">
+{% for p in object.company.performers.all %}
+{% if p.username == user.username %}
+
+<div class="col-sm-5 mx-auto">
+
+<h2>
+    <u>Title</u>: {{ object.title }} <br><br>
+    {% if object.rehearsal_start %}<u>Rehearsal Start Date</u>: {{ object.rehearsal_start }} <br><br>{% endif %}
+<u>Show Opens</u>: {{ object.show_open }}<br><br>
+{% if object.director_id %}<u>Director</u>: {{ object.director_id.name }}{% endif %}
+</h2>
+<br>
+{% if object.calltime_set.all.count > 0 %}
+<h2><u>Daily Schedules</u></h2>
+{% for date in object.calltime_set.all %}
+{% ifchanged date.date %}
+<a href="{% url 'getdata:callinfo' date.id %}">{{ date.date }}</a>{% if date.date != object.calltime_set.all.last.date %},{% endif %}
+{% endifchanged %}
+{% endfor %}
+<br><hr><br>
+</div>
+<div class="col-sm-6" style="border-left: solid 2px white; padding-left: 50px;">
+<h2><u>Most Recent Schedule:</u></h2>
+<h3>{{ object.calltime_set.all.last.date }}</h3>
+{% for call in object.calltime_set.all|dictsort:'start_time' %}
+{% if call.date == object.calltime_set.all.last.date %}
+<hr>
+<h3>{% if call.start_time %}{{ call.start_time|time:"g:i a" }}{% endif %}{% if call.end_time %} - {{ call.end_time|time:"g:i a" }}{% endif %}</h3>
+{% if call.headline %}<h4>{{ call.headline }}</h4>{% endif %}
+{% if call.venue_id %}
+<u>{{ call.venue_id }}</u> - {{ call.venue_id.location }}<br>
+{% endif %}
+{% if call.performers.all.count > 0 %}Cast Called: <ul>{% for p in call.performers.all %} <li>{{ p }}</li>{% endfor %}</ul>{% endif %}
+{% if call.quickcall_set.all.count > 0 %}{% for q in call.quickcall_set.all %}{{ q.start_time|time:"g:i a" }}{% if q.end_time %} - {{ q.end_time|time:"g:i a" }}{% endif %}{% if q.details %} <u>{{ q.details }}</u>{% endif %}{% if q.performers.all.count > 0 %}: {% for p in q.performers.all %}{{ p }}&nbsp;&nbsp;&nbsp;{% endfor %}{% endif %}<br>{% endfor %}{% endif %}
+{% if call.notes %}<br>{{ call.notes }}{% endif %}
+{% endif %}
+{% endfor %}
+{% else %}
+{% endif %}
+<br>
+</div>
+{% endif %}
+{% endfor %}
+</div>
+</div>
+<!-- same code as above but with some company permissions-->
+{% if object.company.username == user.username or self.email in string %}
+<div class="container-fluid">
+    <div class="row">
+    <div class="col-sm-5 mx-auto">
+    <h2>
+        <u>Title</u>: {{ object.title }} <br><br>
+        {% if object.rehearsal_start %}<u>Rehearsal Start Date</u>: {{ object.rehearsal_start }} <br><br>{% endif %}
+    <u>Show Opens</u>: {{ object.show_open }}<br><br>
+    {% if object.director_id %}<u>Director</u>: {{ object.director_id.name }}{% endif %}
+    </h2>
+    <br>
+    {% if object.calltime_set.all.count > 0 %}
+    <h2><u>Daily Schedules</u></h2>
+    {% for date in object.calltime_set.all %}
+    {% ifchanged date.date %}
+    <a href="{% url 'getdata:callinfo' date.id %}">{{ date.date }}</a>{% if date.date != object.calltime_set.all.last.date %},{% endif %}
+    {% endifchanged %}
+    {% endfor %}
+    <br><br>
+    {% if user.groups.all.last.name == 'Company' %}
+    <form style="display: inline; margin-left: 5%;" action="{% url 'getdata:show-update' object.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="show_id" value="{{ object.id }}">&nbsp;
+        <button type="submit" class="btn btn-secondary">
+            <i class="fa fa-wrench"></i>
+        </button>&nbsp;
+    </form>&nbsp;
+    <form style="display: inline" action="{% url 'getdata:show-delete' object.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="show_id" value="{{ object.id }}">
+        <button type="submit" class="btn btn-danger">
+            <i class="fa fa-trash"></i>
+        </button>
+    </form>
+    {% endif %}
+    <br><hr><br>
+    </div>
+<div class="col-sm-6" style="border-left: solid 2px white; padding-left: 50px;">
+    <h2><u>Most Recent Schedule:</u></h2>
+    <h3>{{ object.calltime_set.all.last.date }}</h3>
+    {% for call in object.calltime_set.all|dictsort:'start_time' %}
+    {% if call.date == object.calltime_set.all.last.date %}
+    <hr style="margin-right: 10%;">
+    <h3>{% if call.start_time %}{{ call.start_time|time:"g:i a" }}{% endif %}{% if call.end_time %} - {{ call.end_time|time:"g:i a" }}{% endif %}</h3>
+    {% if call.headline %}<h4>{{ call.headline }}</h4>{% endif %}
+    {% if call.venue_id %}
+    <u>{{ call.venue_id }}</u> - {{ call.venue_id.location }}<br>
+    {% endif %}
+    {% if call.performers.all.count > 0 %}Cast Called: <ul>{% for p in call.performers.all %} <li>{{ p }}</li>{% endfor %}</ul>{% endif %}
+    {% if call.quickcall_set.all.count > 0 %}{% for q in call.quickcall_set.all %}{{ q.start_time|time:"g:i a" }}{% if q.end_time %} - {{ q.end_time|time:"g:i a" }}{% endif %}{% if q.details %} <u>{{ q.details }}</u>{% endif %}{% if q.performers.all.count > 0 %}: {% for p in q.performers.all %}{{ p }}&nbsp;&nbsp;&nbsp;{% endfor %}{% endif %}<br>{% endfor %}{% endif %}
+    {% if call.notes %}<br>{{ call.notes }}{% endif %}
+    {% endif %}
+    {% endfor %}
+    {% else %}
+    {% if user.groups.all.last.name == 'Company' %}
+    <form style="display: inline; margin-left: 5%;" action="{% url 'getdata:show-update' object.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="show_id" value="{{ object.id }}">&nbsp;
+        <button type="submit" class="btn btn-secondary">
+            <i class="fa fa-wrench"></i>
+        </button>&nbsp;
+    </form>&nbsp;
+    <form style="display: inline" action="{% url 'getdata:show-delete' object.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="show_id" value="{{ object.id }}">
+        <button type="submit" class="btn btn-danger">
+            <i class="fa fa-trash"></i>
+        </button>
+    </form>
+    {% endif %}
+    {% endif %}
+    <br>
+</div>
+{% endif %}
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+<div class="indent">
+<div class="container"><h1>Staff</h2></div><br>
+<h1><a href="{% url 'getdata:staff-add' %}?{{ self.id }}"><i class="fa fa-user-plus"></i> Add Staff</a></h1>
+<hr>
+{% if user.groups.all.last.name == 'Company' %}
+{% for staff in object_list %}
+<h2>
+{{ staff.first_name }} {{ staff.last_name }} - {{ staff.email }}
+</h2>
+<br>
+<form style="display: inline; margin-left: 5%;" action="{% url 'getdata:staff-update' staff.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="staff_id" value="{{ staff.id }}">&nbsp;
+    <button type="submit" class="btn btn-secondary">
+        <i class="fa fa-wrench"></i>
+    </button>&nbsp;
+</form>&nbsp;
+<form style="display: inline" action="{% url 'getdata:staff-delete' staff.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="staff_id" value="{{ staff.id }}">
+    <button type="submit" class="btn btn-danger">
+        <i class="fa fa-trash"></i>
+    </button>
+</form>
+<hr>
+{% endfor %}
+{% endif %}
+</div>
+</div>
+{% endblock %}

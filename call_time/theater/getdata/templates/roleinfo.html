@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+<br>
+<div class="container"><h1>Role Details</h1></div>
+<br>
+<div class="indent">
+    {% for p in object.show_id.company.performers.all %}
+        {% if p.username == user.username %}
+            <h2>
+                <u>Name:</u> {{ object.name }} <br><br>
+                <u>Show:</u> {{ object.show_id.title }} <br><br>
+                <u>Performer:</u> {{ object.performer_id.first_name }} {{object.performer_id.last_name }}<br><br>
+                {% if object.category.all.count > 0 %}
+                    <u>Category</u>:
+                    {% for cat in object.category.all %}
+                        <a href="{% url 'getdata:categoryinfo' cat.id %}">{{ cat.name }}</a>&emsp;
+                    {% endfor %}
+                {% endif %}
+            </h2>
+            <br>
+        {% endif %}
+    {% endfor %}
+    {% if object.show_id.company.username == user.username or self.email in string %}
+        <h2>
+            <u>Name</u>: {{ object.name }} <br><br>
+            <u>Show</u>: {{ object.show_id.title }} <br><br>
+            <u>Performer</u>: {{ object.performer_id.first_name }} {{object.performer_id.last_name }} <br><br>
+            {% if object.category.all.count > 0 %}
+                <u>Category</u>:
+                {% for cat in object.category.all %}
+                    <a href="{% url 'getdata:categoryinfo' cat.id %}">{{ cat.name }}</a>&emsp;
+                {% endfor %}
+            {% endif %}
+        </h2>
+        <br>
+        <form style="display: inline; margin-left: 5%;" action="{% url 'getdata:role-update' object.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="role_id" value="{{ object.id }}">&nbsp;
+            <button type="submit" class="btn btn-secondary">
+                <i class="fa fa-wrench"></i>
+            </button>&nbsp;
+        </form>&nbsp;
+        <form style="display: inline" action="{% url 'getdata:role-delete' object.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="role_id" value="{{ object.id }}">
+            <button type="submit" class="btn btn-danger">
+                <i class="fa fa-trash"></i>
+            </button>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

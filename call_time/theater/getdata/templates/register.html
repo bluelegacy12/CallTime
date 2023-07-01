@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="container">
+<h1>Create New <span>Artist</span> Account</h1>
+<i>Username and password are case-sensitive</i><br>
+<form class="form-horizontal" action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% include 'form-template.html' %}
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-success">Submit</button>
+        </div>
+    </div>
+</form><br><br>
+<h2>To sign up as a company, <a href="{% url 'getdata:registercompany' %}">click here</a></h1>
+    <h3>Company accounts have the authority to create schedules and add artists to their season.</h3>
+</div>
+{% endblock %}

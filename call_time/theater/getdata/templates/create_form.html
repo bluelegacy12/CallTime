@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if self.email in string or object.id == self.id %}
+    <div class="container-fluid px-5">
+        <form class="form-horizontal" action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% include 'form-template.html' %}
+            <div class="row">
+                    <div class="col-sm-1 form-group pl-5">
+                        <button type="submit" class="btn btn-success">Submit</button>
+                    </div>
+        </form>
+                {% if viewName == "Unchecked Performers will be removed" %}
+                    <div class="col-sm-2 form-group">
+                        <a href="{% url 'getdata:artists-delete-all' object.id %}?{{ object.id }}" class="btn btn-danger">Remove All</a>
+                    </div>
+                {% endif %}
+            </div>
+
+    </div>
+{% else %}
+    <br>
+    <h1 class="text-center">Access denied. You must have the corresponding Company account to proceed.</h1>
+{% endif %}
+{% endblock %}

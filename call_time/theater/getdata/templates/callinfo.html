@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+<head>
+ </head>
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+{% if user.groups.all.last.name == "Company" %}
+<br>
+<div class="container d-flex justify-content-center">
+
+        <form class="form-horizontal mr-4" style="display: inline-block" action="{% url 'getdata:schedule-view' %}" target="_blank" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <div>
+                    <input name="schedule" id="scheduleView" type="text" hidden="true">
+                    <input name="showtitle" id="showtitle" type="text" hidden="true" value="{{ object.show_id_id.title }}">
+                    <input name="date" id="date" type="text" hidden="true" value="{{ object.date }}">
+                    <input name="company" id="company" type="text" hidden="true" value="{{ object.company.id }}">
+                    {% if is_mobile %}
+                        <button type="submit" id="viewBtn" class="btn btn-info" style="margin-top: 5.5px">View PDF</button>
+                    {% else %}
+                        <button type="submit" id="viewBtn" class="btn btn-info">View PDF</button>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+
+        <form class="form-horizontal" action="{% url 'getdata:schedule' %}" target="_blank" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <div>
+                    <input name="schedule" id="schedule" type="text" hidden="true">
+                    <input name="showtitle" id="showtitle" type="text" hidden="true" value="{{ object.show_id_id.title }}">
+                    <input name="date" id="date" type="text" hidden="true" value="{{ object.date }}">
+                    <input name="company" id="company" type="text" hidden="true" value="{{ object.company.id }}">
+                    <button type="submit" class="btn btn-warning text-white" id="sendBtn">Publish Schedule</button>&nbsp;
+                    <span id="callModalBtn" class="btn btn-sm btn-info spin no-outline fa fa-info rounded-circle mb-3" style="font-size: 12px" data-toggle="modal" data-target="#callModal" aria-hidden="true"></span>
+                </div>
+            </div>
+            <input type="text" name="message" id="message" style="margin-left: -40%" placeholder="Publish Message (optional)">
+        </form>
+</div>
+{% endif %}
+<br><br>
+
+<div class="indent" id="contentToPrint">
+    {% if user.groups.all.last.name == "Company" %}
+        <h1 style="size: 150%; text-align: center;" id="objectDate">{{ object.date }}</h1>
+        {% for show in object.company.shows_set.all %}
+            <div class="card bg-dark mb-5" style="width: 95%;">
+                {% if user.username == object.company.username or self.email in string %}
+                    <div class="card-header bg-info show"><h1 style="padding: 12px 10px 0px 10px; text-align: center;">{{ show.title }}</h1></div>
+                    <div class="card-body bg-dark">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item bg-dark">
+                                {% for call in calltimes|dictsort:'start_time' %}
+                                    {% if call.date == object.date and call.show_id_id == show %}
+                                        <h2 style="-webkit-text-stroke: 0px white; color: #00A8E8;" class="bigger monochrome"><u>{% if call.start_time %}{{ call.start_time|time:"g:i a" }}{% if call.end_time %} - {{ call.end_time|time:"g:i a" }}{% endif %}{% endif %}</u>{% if call.headline %}&nbsp;&nbsp;&nbsp;{{ call.headline }}{% endif %}</h2>
+                                        <h3 style="margin: 0; padding: 0;">{% if call.venue_id %}
+                                            {{ call.venue_id }} - {{ call.venue_id.location }}
+                                        {% endif %}</h3>
+                                        {% if call.performers.all.count > 0 %}<h3 style="margin: 10px 0 0 0; padding: 0; text-align: left">Cast Called: <ul style="margin: 0 0 0 10px; padding: 0 0 0 10px;">{% for p in call.performers.all %} <li style="display: inline-block; margin: 10px; -webkit-text-stroke: 0px white; color: #00A8E8" class="monochrome">{{ p }}</li>&nbsp; &nbsp;{% endfor %}</ul></h3>{% endif %}
+                                        <h3 style="margin-bottom: 0;">
+                                            {% for q in call.quickcall_set.all|dictsort:'start_time' %}
+                                                <span style="-webkit-text-stroke: 0px white; display: inline; color: #00A8E8" class="monochrome">{{ q.start_time|time:"g:i a" }}{% if q.end_time %} - {{ q.end_time|time:"g:i a" }}{% endif %}{% if q.details %} <u>{{ q.details }}</u>{% endif %}</span>&nbsp;&nbsp;&nbsp;&nbsp;{% for p in q.performers.all %}{{ p }}&nbsp;&nbsp;&nbsp;{% endfor %}
+                                                <form class="noprint" style="display: inline; position: absolute; right: 1vmax; up: 5vmax;" action="{% url 'getdata:quick-delete' q.id %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="quick_id" value="{{ q.id }}">
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </form>&nbsp;
+                                                <form class="noprint" style="display: inline; position: absolute; right: 3.5vmax;" action="{% url 'getdata:quick-update' q.id %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="quick_id" value="{{ q.id }}">
+                                                    <button type="submit" class="btn btn-secondary">
+                                                        <i class="fa fa-wrench"></i>
+                                                    </button>&nbsp;
+                                                </form>
+                                                <br>
+                                            {% endfor %}
+                                        </h3>
+                                        {% if call.staff.all.count > 0 %}<h3 style="text-align: right; margin: 0;">{% for s in call.staff.all %}<i>&nbsp; &nbsp;{{ s }}</i>{% endfor %}</h3>{% endif %}
+                                        {% if call.notes %}<h3 class="bdr" style="border: .1px white solid; padding: 5px; margin-top: 0;"> {{ call.notes }}</h3>{% endif %}
+                                        {% if user.groups.all.last.name == 'Company' %}
+                                        <div class="noprint">
+                                            <a href="{% url 'getdata:quick-add' %}?{{ call.id }}"><i class="fa fa-calendar-plus mt-3"> Add call breakdown</i></a>
+                                            <br><br>
+                                            <form style="display: inline; margin-left: 25%;" action="{% url 'getdata:call-update' call.id %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="call_id" value="{{ call.id }}">&nbsp;
+                                                <button type="submit" class="btn btn-secondary mb-3">
+                                                    <i class="fa fa-wrench"></i>
+                                                </button>&nbsp;
+                                            </form>&nbsp;
+                                            <form style="display: inline" action="{% url 'getdata:call-delete' call.id %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="call_id" value="{{ call.id }}">
+                                                <button type="submit" class="btn btn-danger mb-3">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <hr id="hr2" style="margin-right: 0; border: solid white 2px; margin-top: 0;">
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        {% for performer in object.company.performers.all %}
+            {% if performer.username == user.username %}
+                <h1 style="size: 150%; text-align: center;">{{ object.date }}</h1>
+                {% for show in object.company.shows_set.all %}
+                    <div class="card bg-dark mb-5" style="width: 95%;">
+                        <div class="card-header bg-info show"><h1 style="padding: 10px 10px 5px 10px; text-align: center;">{{ show.title }}</h1></div>
+                        <div class="card-body bg-dark">
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item bg-dark">
+                                    {% for call in calltimes|dictsort:'start_time' %}
+                                        {% if call.date == object.date and call.show_id_id == show %}
+                                            <h2 style="-webkit-text-stroke: 0px white; color: #00A8E8;"><u>{% if call.start_time %}{{ call.start_time|time:"g:i a" }}{% if call.end_time %} - {{ call.end_time|time:"g:i a" }}{% endif %}{% endif %}</u>{% if call.headline %}&nbsp;&nbsp;&nbsp;{{ call.headline }}{% endif %}</h2>
+                                            <h3 style="margin: 0; padding: 0;">{% if call.venue_id %}
+                                                {{ call.venue_id }} - {{ call.venue_id.location }}
+                                            {% endif %}</h3>
+                                            {% if call.performers.all.count > 0 %}<h3>Cast Called: <ul>{% for p in call.performers.all %} <li style="display: inline-block; margin: 10px; -webkit-text-stroke: 0px white; color: #00A8E8">{{ p }}</li>&nbsp; &nbsp;{% endfor %}</ul></h3>{% endif %}
+                                            <h3>
+                                                <div style="font-size: 80%">
+                                                    {% for q in call.quickcall_set.all|dictsort:'start_time' %}
+                                                        <span style="-webkit-text-stroke: 0px white; display: inline; color: #00A8E8">{{ q.start_time|time:"g:i a" }}{% if q.end_time %} - {{ q.end_time|time:"g:i a" }}{% endif %}{% if q.details %} <u>{{ q.details }}</u>{% endif %}</span>&nbsp;&nbsp;&nbsp;&nbsp;{% for p in q.performers.all %}{{ p }}&nbsp;&nbsp;&nbsp;{% endfor %}
+                                                        <br>
+                                                    {% endfor %}
+                                                </div>
+                                            </h3>
+                                            {% if call.staff.all.count > 0 %}<h3 style="text-align: right; padding: 0; margin: 0;">{% for s in call.staff.all %}<i>&nbsp; &nbsp;{{ s }}</i>{% endfor %}</h3>{% endif %}
+                                            {% if call.notes %}<h3 class="bdr" style="border: .1px white solid; padding: 5px; margin-top: 0;"> {{ call.notes }}</h3>{% endif %}
+                                            <hr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}<br><br>
+    </div>
+</div>
+
+<div class="modal fade" id="callModal">
+    <div class="modal-dialog modal-lg text-center" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h2 class="modal-title text-center" id="tutorialTitle">Call Info Page</h2>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="text-dark no-outline">×</span>
+                </button>
+            </div>
+            <div class="modal-body bg-secondary">
+                <h2>Buttons</h2>
+                <p>The <b class="text-warning">Publish Schedule</b> button will generate a pdf of the schedule, as listed below, and email it to all artists and staff members associated with {{ object.company }}.</p>
+                <p>The <b class="text-info">View PDF</b> button allows you to preview the pdf without sending it to anyone.</p>
+                <p>The <b class="sm-outline">Publish Message</b> option allows you to type a custom message that will be attached to the body of the email that is sent when the <b class="text-warning no-outline">Publish Schedule</b> button is pressed.</p>
+                <p>Note: The mobile app does not support pdf viewing, please use a web browser if on mobile.</p>
+            </div>
+            <div class="modal-footer bg-info">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.5/jspdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+    let sendBtn = document.querySelector('#sendBtn');
+    let viewBtn = document.querySelector('#viewBtn');
+    let noprint = document.querySelectorAll('.noprint');
+    let border = document.querySelectorAll('.bdr');
+    let show = document.querySelectorAll('.show');
+    let bigger = document.querySelectorAll('.bigger');
+    let monochrome = document.querySelectorAll('.monochrome');
+    let date = document.querySelector('#objectDate');
+
+    viewBtn.addEventListener("click", CopyTextView);
+    sendBtn.addEventListener("click", CopyTextSend);
+
+    function CopyTextSend() {
+        let pad = show[0].style.padding;
+        date.style.lineHeight = "0%";
+        for (let n of noprint){ n.style.display = "none"; }
+        for (let m of monochrome){ m.style.color = "black"; m.style.lineHeight = "75%"; }
+        for (let b of bigger){ b.style.fontSize = "150%"; }
+        for (let b of border){ b.style.borderColor = "black"; }
+        for (let s of show){ s.style.borderStyle = "solid"; s.style.borderColor = "black"; s.style.borderWidth = ".1px"; s.style.backgroundColor = 'black'; s.style.color = 'white'; s.style.padding = '110%'; }
+        let text = "<div style='font-size: 125%;'>" + document.querySelector('#contentToPrint').innerHTML + "</div>";
+        document.querySelector('#schedule').value = text;
+        date.style.lineHeight = "";
+        for (let n of noprint){ n.style.display = "inline"; }
+        for (let m of monochrome){ m.style.color = "#00A8E8"; m.style.lineHeight = ""; }
+        for (let b of bigger){ b.style.fontSize = ""; }
+        for (let b of border){ b.style.borderColor = "white"; }
+        for (let s of show){ s.style.borderStyle = "none"; s.style.backgroundColor = ''; s.style.color = ''; s.style.padding = pad; }
+        alert("PDF sent to all artists on file!");
+    }
+
+    function CopyTextView() {
+        let pad = show[0].style.padding;
+        date.style.lineHeight = "0%";
+        for (let n of noprint){ n.style.display = "none"; }
+        for (let m of monochrome){ m.style.color = "black"; m.style.lineHeight = "75%"; }
+        for (let b of bigger){ b.style.fontSize = "150%"; }
+        for (let b of border){ b.style.borderColor = "black"; }
+        for (let s of show){ s.style.borderStyle = "solid"; s.style.borderColor = "black"; s.style.borderWidth = ".1px"; s.style.backgroundColor = 'black'; s.style.color = 'white'; s.style.padding = '110%'; }
+        let text = "<div style='font-size: 125%;'>" + document.querySelector('#contentToPrint').innerHTML + "</div>";
+        document.querySelector('#scheduleView').value = text;
+        date.style.lineHeight = "";
+        for (let n of noprint){ n.style.display = "inline"; }
+        for (let m of monochrome){ m.style.color = "#00A8E8"; m.style.lineHeight = ""; }
+        for (let b of bigger){ b.style.fontSize = ""; }
+        for (let b of border){ b.style.borderColor = "white"; }
+        for (let s of show){ s.style.borderStyle = "none"; s.style.backgroundColor = ''; s.style.color = ''; s.style.padding = pad; }
+    }
+
+    $('#callModal').on('shown.bs.modal', function () {
+        $('#callModalBtn').trigger('focus')
+    })
+</script>
+{% endblock %}

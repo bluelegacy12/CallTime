@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block body %}
+        {% if name and email and phone %}
+        <h1>{{ name }} added successfully!</h1>
+        <h2>
+            Email: {{ email }}
+            Phone: {{ phone }}
+        </h2>
+        {% else %}
+        <h1>
+            Action failed. Not all parameters filled.
+        </h1>
+        {% endif %}
+{% endblock %}

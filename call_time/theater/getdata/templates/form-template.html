@@ -1,0 +1,257 @@
+<br>
+<br>
+{% if viewName is not None %}
+    <h2>{{ viewName }}</h2>
+    <p>{{ subName }}</p>
+{% endif %}
+<br>
+{{ form.non_field_errors }}
+{% if dates %}
+    <input type='text' id='dates' hidden='true' value="{{ dates }}">
+{% endif %}
+<div class="row">
+    <div class="col-12 px-5">
+        {% for field in form %}
+            {% if "company" in field.label_tag or "call" in field.label_tag %}
+                <div class="form-group align-items-center">
+                    <div class="form-row align-items-center">
+                        <span class="text-danger small">{{ field.errors }}</span>
+                    </div>
+                    <div class="form-row align-items-center">
+                        <label class="control-label col-sm-2"></label>
+                        <input type="text" hidden="true" value="{{ object.id }}" id="{{ field.name }}" name="{{ field.name }}">
+                    </div>
+                </div>
+                {% if staff.count > 0 and 'call' not in field.label_tag %}
+                    <div class="form-group align-items-center">
+                        <div class="form-row">
+                            <span class="text-danger small">{{ field.errors }}</span>
+                        </div>
+                        <div class="form-row">
+                            <label class="control-label col-sm-2">Company</label>
+                            <div class="col-sm-3">
+                                <select onChange="window.location.href=this.value">
+                                    <option hidden>Choose Company</option>
+                                    <option id="{{ self.id }}" class="comp" value="{% url link %}">{{ self.name }}</option>
+                                    {% for s in staff %}
+                                        <option id="{{ s.company.id }}" class="comp" value="{% url link %}">{{ s.company.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <br>
+                    <h2 class="ml-5">{{ object.name }}</h2>
+                    <br>
+                {% endif %}
+            {% elif "Performers" in field.label_tag %}
+                <div class="form-group align-items-center">
+                    <div class="form-row align-items-center">
+                        <label class="control-label col-sm-2">Select by Category: </label>
+                        &nbsp;&nbsp;<label class="control-label col-sm-2"><input id="tutti" type="checkbox"> Tutti</label>
+                        {% for cat in company.category_set.all %}
+                            {% for role in cat.roles_set.all %}
+                                <input type="text" hidden="true" class="{{ cat }}Role" value="{{ role.performer_id.id }}">
+                            {% endfor %}
+                            <label class="control-label col-sm-2"><input class="cat" id="{{ cat }}" type="checkbox"> {{ cat.name }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-group align-items-center">
+                    <div class="form-row">
+                        <span class="text-danger small">{{ field.errors }}</span>
+                    </div>
+                    <div class="form-row">
+                        <label class="control-label col-sm-2">{{ field.label_tag }}</label>
+                        <div class="col-sm-3" id="{{ field.name }}">{{ field }}</div>
+                    </div>
+                </div>
+            {% elif "Staff" in field.label_tag %}
+                <hr>
+                <div class="form-group align-items-center">
+                    <div class="form-row">
+                        <span class="text-danger small">{{ field.errors }}</span>
+                    </div>
+                    <div class="form-row">
+                        <label class="control-label col-sm-2">{{ field.label_tag }}</label>
+                        <div class="col-sm-3" id="{{ field.name }}">{{ field }}</div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="form-group align-items-center">
+                    <div class="form-row">
+                        <span class="text-danger small">{{ field.errors }}</span>
+                    </div>
+                    <div class="form-row">
+                        <!-- This is terrible. Will def set myself up better in the models next time-->
+                        <label class="control-label col-sm-2">{% if "show_id" in field.label_tag %} Show:
+                            {% elif "performer_id" in field.label_tag %} Performer:
+                            {% elif "role_id" in field.label_tag %} Role:
+                            {% elif "director_id" in field.label_tag %} Director:
+                            {% elif "venue_id" in field.label_tag %} Venue:
+                            {% else %} {{ field.label_tag }} {% endif %}</label>
+                        <div class="col-sm-6" id='{{ field.name }}'>{{ field }} {% if "director_id" in field.label_tag or "end" in field.label_tag or "headline" in field.label_tag or "start_time" in field.label_tag and "Conflict" in viewName or "performer_id" in field.label_tag and "Role" in viewName %} optional {% endif %}</div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal fade" id="conflictModal">
+    <div class="modal-dialog modal-lg text-center" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h2 class="modal-title text-center" id="conflictTitle">There are Artist Conflicts on the selected date!</h2>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="text-dark no-outline">×</span>
+                </button>
+            </div>
+            <div class="modal-body bg-secondary" id='text'>
+                <ul style="list-style-type: none;" class="text-left">
+                    {% for conflict in conflicts %}
+                        {% if conflict.end_date %}
+                            <li class="range allConflicts end{{ conflict.start_date|date:'Y-m-d' }}-{{ conflict.end_date|date:'Y-m-d' }} mt-3" id="conflict{{ conflict.id }}">
+                        {% else %}
+                            <li class="conflict{{ conflict.start_date|date:'Y-m-d' }} allConflicts mt-3" id="conflict{{ conflict.id }}">
+                        {% endif %}
+                            <i style='color: #00A8E8; display: inline; -webkit-text-stroke: .1px white;'>
+                                {{ conflict.performer_id.first_name }} {{ conflict.performer_id.last_name }}
+                            </i>&emsp;
+                            {% if conflict.start_time %}
+                                {{ conflict.start_time|time:'g:i a' }} -
+                                {% if conflict.end_time %}
+                                    {{ conflict.end_time|time:'g:i a' }}
+                                {% else %}
+                                    End of Day
+                                {% endif %}
+                            {% elif conflict.end_time %}
+                                Start of Day - {{ conflict.end_time|time:'g:i a' }}
+                            {% else %}
+                                All Day
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="modal-footer bg-info">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    // category selector logic
+
+    const companies = document.querySelectorAll('.comp');
+
+    for (let c of companies){
+        c.value += `?${c.id}`;
+    }
+
+    const cats = document.querySelectorAll(".cat");
+    const checkBoxes = document.querySelectorAll("#performers input[type=checkbox]");
+
+    for (let cat of cats) {
+        cat.addEventListener('click', CheckUncheck);
+        let cl = cat.getAttribute('id');
+        let roles = document.querySelectorAll(`.${cl}Role`);
+        for (let role of roles) {
+            for (let box of checkBoxes) {
+                if (role.value == box.value){
+                    box.classList.add(cl);
+                }
+            }
+        }
+    }
+
+    let tutti = document.querySelector('#tutti');
+    if (tutti) {
+        tutti.addEventListener('click', CheckAll);
+    }
+
+    function CheckUncheck() {
+        if (this.checked){
+            for (let box of checkBoxes) {
+                if (box.classList.contains(this.getAttribute('id'))) {
+                    box.checked = true;
+                }
+            }
+        } else {
+            for (let box of checkBoxes) {
+                if (box.classList.contains(this.getAttribute('id'))) {
+                    box.checked = false;
+                }
+            }
+        }
+    }
+
+    function CheckAll() {
+        if (tutti.checked) {
+            for (let box of checkBoxes) {
+                box.checked = true;
+            }
+        } else {
+            for (let box of checkBoxes) {
+                box.checked = false;
+            }
+        }
+    }
+
+    // conflict checker logic
+
+    const datePicker = document.querySelector('#date input');
+    const dates = document.querySelector('#dates').value;
+    const allConflicts = document.querySelectorAll('.allConflicts');
+    const conflictRange = document.querySelectorAll('.range');
+    const conflictTitle = document.querySelector('#conflictTitle');
+    datePicker.addEventListener('change', getDate);
+
+    // calculate the dates within ranges and add a date class for every day within the range to be compared with selected date
+    for (let con of conflictRange) {
+        let rangeClass = "";
+        for (let c of con.classList) {
+            if (c.length > 20) {
+                rangeClass = c;
+            }
+        }
+        let start = new Date(rangeClass.slice(3, 13));
+        let end = new Date(rangeClass.slice(14, 24));
+        if (end <= start) {
+            con.classList.add('conflict' + start.toISOString().slice(0, 10));
+            console.log(start, end,' end date is on or before the start date');
+            continue;
+        }
+        let day = new Date(start);
+        for (let i = 0; day < end; i++) {
+            day.setDate(start.getDate() + i)
+            con.classList.add('conflict' + day.toISOString().slice(0, 10));
+        }
+    }
+
+    // show conflicts with class that matches datePicker value
+    function getDate() {
+        if (dates.includes(datePicker.value)) {
+            let conflicts = document.querySelectorAll(`.conflict${datePicker.value}`);
+
+            // reset all conflicts to hidden
+            for (let con of allConflicts) {
+                con.style.display = "none";
+            }
+
+            // show only the conflicts with the selected date
+            for (let con of conflicts) {
+                con.style.display = "";
+            }
+            let day = new Date(datePicker.value);
+            // day is initialized to the day before - add one to fix
+            day.setDate(day.getDate() + 1);
+            conflictTitle.innerHTML = `&emsp;There are Artist Conflicts on ${day.toDateString()}!`
+            $('#conflictModal').modal('show');
+        }
+    }
+
+</script>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>CallTime Scheduler</title>
+        {% load static %}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+        <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script>
+        <script src="https://malsup.github.io/jquery.form.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+        <script src="https://smtpjs.com/v3/smtp.js"></script> <!-- Used to send emails with Feedback Modal -->
+    </head>
+    <body style="text-align: left;">
+        <style>
+            body {
+                background: linear-gradient(90deg, #003459 0%, #003459 25%, #007EA7 100%);
+                text-align: left;
+                font: italic 20pt "Fira Sans", serif;
+                color: white;
+
+                text-shadow: 3px 3px 6px #00171F;
+                font-size: 3.5vmin;
+            }
+
+            a, span {
+                color: #00A8E8;
+                -webkit-text-stroke: .1px white;
+            }
+
+            a.btn {
+                -webkit-appearance: button;
+                font-family: inherit;
+            }
+
+            input, textarea, select {
+                border: #00A8E8 solid;
+                border-radius: 6px;
+                background-color: #003459;
+                color: white;
+            }
+            option {
+                background-color: #003459;
+            }
+            input:-webkit-autofill,
+            textarea:-webkit-autofill,
+            select:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 1000px #003459 inset !important;
+            -webkit-text-fill-color: white !important;
+            }
+
+            textarea {
+                width: 30vmax;
+            }
+
+            h1, h2 {
+                font: bold;
+                font-size: 150%;
+                -webkit-text-stroke: 1px white;
+            }
+            h4 {
+                font-size: 125%;
+            }
+            h3 {
+                font-size: 150%;
+            }
+            hr {
+                border-color: white;
+            }
+            .jumbotron {
+                background-image: linear-gradient(to right, DeepSkyBlue 0%, #007EA7 40%);
+                padding: 0;
+            }
+            .indent {
+                margin-left: 3%;
+            }
+            #footer {
+                position: relative;
+                padding: 10px 10px 0px 10px;
+                bottom: 1%;
+                width: 100%;
+                /* Height of the footer*/
+                height: 40px;
+            }
+            .dropdown-menu {
+                background-color: #003459;
+                border: solid .1px white;
+            }
+            .dropdown-item {
+                -webkit-text-stroke: .2px DeepSkyBlue;
+                color: white;
+            }
+            .nav-item {
+                border-left: #00A8E8 solid .2px;
+                margin-left: 1%;
+            }
+            .btn {
+                font-size: 2.5vmin;
+            }
+            .no-outline, .text-danger {
+                -webkit-text-stroke: 0px;
+            }
+            .sm-outline {
+                -webkit-text-stroke: .1px #white;
+            }
+            span, .fa-spinner{
+                text-shadow: 0 0 0;
+            }
+        </style>
+
+            {% if user.is_authenticated %}
+            {% if user.groups.all.last.name == 'Company' %}
+            <nav class="navbar navbar-expand-lg">
+            <h1><a class="navbar-brand" href="{% url 'getdata:home' %}"><i class="fa fa-home no-outline"></i><span class="sr-only">(current)</span></a></h1>
+              <button class="navbar-toggler btn-outline-info bg-dark" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fa fa-bars"></i>
+              </button>
+
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                  <li class="nav-item">
+                    <a class="nav-link" href="{% url 'getdata:profile' %}" aria-hidden="true">Profile</a>
+                  </li>
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
+                      Create/Add
+                    </a>
+                    <div class="dropdown-menu">
+                      <h3><a class="dropdown-item" href="{% url 'getdata:add-performer' %}" aria-hidden="true">Add Cast Member</a></h3>
+                      <h3><a class="dropdown-item" href="{% url 'getdata:show-add' %}" aria-hidden="true">Add Show</a></h3>
+                      <h3><a class="dropdown-item" href="{% url 'getdata:category-add' %}" aria-hidden="true">Add Category</a></h3>
+                      <h3><a class="dropdown-item" href="{% url 'getdata:conflict-add' %}" aria-hidden="true">Add Conflict</a></h3>
+                      <div class="dropdown-divider"></div>
+                      <h3><a class="dropdown-item" href="{% url 'getdata:call-add' %}" aria-hidden="true">Create a Schedule</a></h3>
+                    </div>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{% url 'getdata:documents' %}" aria-hidden="true">Documents</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{% url 'getdata:venues' %}" aria-hidden="true">Venues</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{% url 'getdata:artists' self.id %}" aria-hidden="true">Artists</a>
+                  </li>
+                </ul>
+                <!-- <form class="form-inline my-2 my-lg-0">
+                  <input class="form-control mx-1" type="search" placeholder="Search" aria-label="Search">
+                  <button class="btn btn-success mr-sm-5" type="submit">Search</button>
+                </form> -->
+                <br>
+                <div>
+                    <a href="" data-toggle="modal" data-target="#feedbackModal" aria-hidden="true">
+                        <i class="fa fa-envelope no-outline"></i> Feedback
+                    </a>&nbsp;
+                    <a href="{% url 'getdata:logout' %}">
+                        <i class="spin no-outline fa fa-power-off"></i> Logout
+                    </a>
+                </div>
+              </div>
+            </nav>
+            {% else %}
+
+            <nav class="navbar navbar-expand-lg">
+                <h1><a class="navbar-brand" href="{% url 'getdata:home' %}"><i class="fa fa-home no-outline"></i><span class="sr-only">(current)</span></a></h1>
+                <button class="navbar-toggler btn-outline-info bg-dark" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="fa fa-bars"></i>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav mr-auto">
+                      <li class="nav-item">
+                        <a class="nav-link" href="{% url 'getdata:profile' %}" aria-hidden="true">Profile</a>
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link" href="{% url 'getdata:documents' %}" aria-hidden="true">Documents</a>
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link" href="{% url 'getdata:venues' %}" aria-hidden="true">Venues</a>
+                      </li>
+                    </ul>
+                    <!-- <form class="form-inline my-2 my-lg-0">
+                      <input class="form-control mx-1" type="search" placeholder="Search" aria-label="Search">
+                      <button class="btn btn-success mr-sm-5" type="submit">Search</button>
+                    </form> -->
+                    <br>
+                    <div>
+                        <a href="" data-toggle="modal" data-target="#feedbackModal" aria-hidden="true">
+                            <i class="fa fa-envelope no-outline"></i> Feedback
+                        </a>&nbsp;
+                        <a href="{% url 'getdata:logout' %}">
+                            <i class="spin no-outline fa fa-power-off"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </nav>
+            {% endif %}
+            {% else %}
+
+            <nav class="navbar navbar-expand-lg">
+            <h1><a class="navbar-brand" href="{% url 'getdata:home' %}"><i class="fa fa-home no-outline"></i><span class="sr-only">(current)</span></a></h1>
+              <button class="navbar-toggler btn-outline-info bg-dark" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fa fa-bars"></i>
+              </button>
+
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="my-2 my-lg-0 ml-auto">
+                    <a href="{% url 'getdata:login' %}">
+                        <i class="fa fa-user no-outline"></i> Login
+                    </a>&nbsp;
+                    <a href="{% url 'getdata:register' %}" style="display:inline;">
+                        <i class="fa fa-address-card no-outline"></i> Sign up
+                    </a>
+                </div>
+              </div>
+            </nav>
+
+    {% endif %}
+    </nav>
+    {% if user.is_authenticated or 'user' in request.get_full_path or 'logout' in request.get_full_path %}
+    <div style="width: 100%;">
+    {% block body %}
+    {% endblock %}
+   </div>
+   <div class="container">
+       <div class="row">
+            <div class="col-12" id="footer">
+                <br>
+                <br>
+                <footer style="text-align: center; font-size: 50%">© 2023 Dylan Elza. All rights reserved.</footer>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <header class="jumbotron jumbotron-fluid">
+        <div style="padding-left: 10%;">
+            {% if is_mobile %}
+                <img width=100 src="/images/CallTimeLogocirclebg.png"></img>
+            {% else %}
+                <img width=240 src="/images/CallTimeLogocirclebg.png"></img>
+            {% endif %}
+        </div>
+    </header>
+    <div class="container text-center justify-content-center">
+    <br>
+    <h2>Call Time is the best way for shows or projects requiring dynamic daily schedules to stay organized and communicate with their cast or team. It provides an easy access tool for members to check their daily schedule and for the schedulers to make those schedules with minimal hassle!</h2>
+    <br>
+    <h2><a href="{% url 'getdata:login' %}">
+        <i class="fa fa-user no-outline" aria-hidden="true"></i>&nbsp; Login
+    </a></h2>
+    <br>
+    Video Guide
+    <br>
+    {% if is_mobile %}
+        <iframe width="auto" height="auto" src="https://www.youtube.com/embed/Jsc_MZOkz2A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    {% else %}
+       <iframe width="560" height="315" src="https://www.youtube.com/embed/Jsc_MZOkz2A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    {% endif %}
+    </div>
+    <br>
+    <div class="row">
+        <div class="col text-center">
+            <h3><a href='https://appsgeyser.io/17028075/CallTime-Scheduler'>Download</a> the app!</h3><iframe src="https://appsgeyser.com/social_widget/social_widget.php?width=100&height=100&apkName=CallTime Scheduler_17028075&simpleVersion=yes" width="180" height="220" vspace="0" hspace="0" frameborder="no" scrolling="no" seamless=""  allowtransparency="true" ></iframe>
+        </div>
+    </div>
+    <footer>
+        <br><br>
+        <p style="text-align: center; font-size: 50%">© 2023 Dylan Elza. All rights reserved.</p>
+    </footer>
+    {% endif %}
+
+    <div class="modal fade" id="feedbackModal">
+        <div class="modal-dialog modal-lg text-center" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h2 class="modal-title text-center" id="tutorialTitle">Send Feedback</h2>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" class="text-dark no-outline">×</span>
+                    </button>
+                </div>
+                <div class="modal-body bg-secondary">
+                    <div id="feedback" class='text-left ml-5'>
+                        <form class='form-horizontal' method='post' action="{% url 'getdata:feedback' %}" target="_blank" id='feedbackForm'>
+                            {% csrf_token %}
+                            <div class='form-group'>
+                                <input id='user' hidden='true' value='{{ self.username }} - {{ self }} - {{ self.email }}'>
+                                <label for="subject">Subject:</label><br>
+                                <input type="text" name="subject" id="subject"><br><br>
+                                <label for="feedbackMessage">Details:</label><br>
+                                <textarea rows='5' name='feedbackMessage' id='feedbackMessage'></textarea><br><br>
+                                <button type="submit" id="sendBtn" class="btn btn-info">Send Feedback</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer bg-info">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   <script>
+        const feedback = document.querySelector('#feedback');
+        const sendBtn = document.querySelector('#sendBtn');
+        const user = document.querySelector('#user').value;
+        const subject = document.querySelector('#subject');
+        const message = document.querySelector('#feedbackMessage');
+        const resetText = feedback.innerHTML;
+        const feedbackForm = document.querySelector('#feedbackForm');
+
+        feedbackForm.addEventListener('submit', sendFeedback)
+
+        function sendFeedback() {
+            feedback.innerHTML = '<h2 class="text-center">Your feedback has been sent. Thank you for your input!</h2>';
+            document.body.appendChild(this);
+        }
+
+       $('#feedbackModal').on('hidden.bs.modal', function (e) {
+            document.body.removeChild(feedbackForm);
+            feedback.innerHTML = resetText;
+        });
+
+        let spinIcons = document.querySelectorAll('.spin');
+
+        for (let spinner of spinIcons) {
+            spinner.addEventListener('mouseover', addPulse);
+            spinner.addEventListener('mouseout', removePulse);
+        }
+
+        function addPulse() {
+            this.classList.add('fa-pulse');
+        }
+
+        function removePulse() {
+            this.classList.remove('fa-pulse');
+        }
+    </script>
+    </body>
+</html>

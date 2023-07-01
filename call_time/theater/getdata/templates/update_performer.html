@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if user.username == object.username %}
+<form class="form-horizontal" action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% include 'form-template.html' %}
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-success">Submit</button>
+        </div>
+    </div>
+</form>
+{% else %}
+<h1>Access denied. You must be logged into this account to proceed.</h1>
+{% endif %}
+{% endblock %}

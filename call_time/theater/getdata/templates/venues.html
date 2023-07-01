@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if error_message %}
+    <h1>{{ error_message }}</h1>
+{% endif %}
+<br>
+<div class="container-fluid pl-md-5">
+    <div class="row">
+        <div class="col-sm-10 text-center">
+            <h1>Rehearsal and Performance Venues</h1><br>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            {% if user.groups.all.last.name == 'Company' %}
+                <h3><a href="{% url 'getdata:venue-add' %}?{{ self.id }}"><i class="fa fa-map no-outline"></i> Add New Venue</a></h3>
+                <hr style="margin-right: 10%;">
+                <h2><u>{{ self.name }}</u></h2>
+                {% for venue in self.rehearsalvenues_set.all %}
+                    <br>
+                    <h2 style="color: #00A8E8; -webkit-text-stroke: .1px white;">{{ venue.name }}</h2>
+                    <h3>{{ venue.location }}</h3>
+                    <form style="display: inline; margin-left: 5%;" action="{% url 'getdata:venue-update' venue.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="venue" value="{{ venue.id }}">&nbsp;
+                        <button type="submit" class="btn btn-secondary">
+                            <i class="fa fa-wrench"></i>
+                        </button>&nbsp;
+                    </form>&nbsp;
+                    <form style="display: inline" action="{% url 'getdata:venue-delete' venue.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="venue_id" value="{{ venue.id }}">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </form>
+                    <br>
+                {% endfor %}
+                <hr style="margin-right: 10%;">
+                {% for s in staff %}
+                    <h2><u>{{ s.company.name }}</u></h2>
+                    {% for venue in s.company.rehearsalvenues_set.all %}
+                        <br>
+                        <h2 style="color: #00A8E8; -webkit-text-stroke: .1px white;">{{ venue.name }}</h2>
+                        <h3>{{ venue.location }}</h3>
+                        <form style="display: inline; margin-left: 5%;" action="{% url 'getdata:venue-update' venue.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="venue" value="{{ venue.id }}">&nbsp;
+                            <button type="submit" class="btn btn-secondary">
+                                <i class="fa fa-wrench"></i>
+                            </button>&nbsp;
+                        </form>&nbsp;
+                        <form style="display: inline" action="{% url 'getdata:venue-delete' venue.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="venue_id" value="{{ venue.id }}">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </form>
+                        <br>
+                    {% endfor %}
+                {% endfor %}
+            {% elif user.groups.all.last.name == 'Artist' %}
+                <hr style="margin-right: 10%;">
+                {% for company in companies %}
+                    {% for performer in company.performers.all %}
+                        {% if performer.username == user.username %}
+                            <h2><u>{{ company }}</u></h2><br>
+                            {% for venue in company.rehearsalvenues_set.all %}
+                                <h3 style="color: #00A8E8; -webkit-text-stroke: .1px white;">{{ venue.name }}</h3>
+                                <h4>{{ venue.location }}</h4>
+                                <br>
+                            {% endfor %}
+                            <hr style="margin-right: 10%;">
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
